@@ -1,6 +1,7 @@
 import tweepy
 from dotenv import load_dotenv
 import os
+from quotes import quotes
 
 load_dotenv("keys.env")
 
@@ -21,7 +22,7 @@ client = tweepy.Client(
 )
 
 response = client.create_tweet(
-    text="Whos gonna carry the boats and the logs ?!"
+    text=quotes()
 )
 
 print(f"https://twitter.com/user/status/{response.data['id']}")

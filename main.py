@@ -3,43 +3,70 @@ Title: David Goggins Twitter bot
 Author: Nathan Blackburn <nblackburndeveloper@icloud.com>
 """
 
-import tweepy
-import time
-from dotenv import load_dotenv
+from requests_oauthlib import OAuth1Session
 import os
-from streamlistener import Stream
+import json
 
-# Assign enviroment variables
-load_dotenv("keys.env")
-consumer_key = os.getenv("consumer_key")
-consumer_secret = os.getenv("consumer_secret")
-access_token = os.getenv("access_token")
-access_token_secret = os.getenv("access_token_secret")
+# Set enviroment variables
+consumer_key = os.environ.get("CONSUMER_KEY")
+consumer_secret = os.environ.get("CONSUMER_SECRET")
 
-# Instantiate Oauth handler and set access token
-auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-auth.set_access_token(access_token, access_token_secret)
+payload = {"text": "They dont know me son!"}
 
-# Instantiate API object
-twt_api = tweepy.API(auth)
+# Get request token
+request_token_url = "https://api.twitter.com/oauth/request_token?oauth_callback=oob&x_auth_access_type=write"
+oauth = OAuth1Session(consumer_key, client_secret=consumer_secret)
 
-def main():
-    # Test credential validation
-    # https://python.plainenglish.io/how-to-create-a-twitter-retweet-bot-using-python-e2cac0f2cab7
-    try:
-        print(f"{twt_api.verify_credentials()}\n")
-        print("Successfully logged in")
-    except tweepy.TweepError as e:
-        print(e)
-    except Exception as e:
-        print(e)
+# https://github.com/twitterdev/Twitter-API-v2-sample-code/blob/main/Manage-Tweets/create_tweet.py
+try:
+    fetch_response = oauth.fetch_request_token(request_token_url)
+except ValueError:
+    print("Error with either consumer_key or consumer_secret")
 
-    listener = Stream(twt_api)
-    stream_retwt = tweepy.Stream(auth=twt_api.auth, listener=listener)
+resource_owner_key = fetch_response.get("oauth_token")
+resource_owner_secret = fetch_response.get("oauth_token_secret")
+print(f"Got OAuth token {resource_owner_key}")
 
-    stream_retwt.filter(track=["from:davidgoggins"])
+# Get authorization
+base_authorization_url = "https://api.twitter.com/oauth/authorize"
+authorization_url = oauth.authorization_url(base_authorization_url)
+print(f"Authorize here: {authorization_url}")
+verifier = input("Enter PIN here: ")
 
-if __name__ == "__main__":
-    main()
+# Get the access token
+access_token_url = "https://api.twitter.com/oauth/access_token"
+oauth = OAuth1Session(
+    consumer_key,
+    client_secret=consumer_secret,
+    resource_owner_key=resource_owner_key,
+    resource_owner_secret=resource_owner_secret,
+    verifier=verifier
+)
+oauth_tokens = oauth.fetch_access_token(access_token_url)
 
+access_token = oauth_tokens["oauth_token"]
+access_token_secret = oauth_tokens["oauth_token_secret"]
+
+# Make the request
+oauth = OAuth1Session(
+    consumer_key,
+    client_secret=consumer_secret,
+    resource_owner_key=access_token,
+    resource_owner_secret=access_token_secret
+)
+
+# Make the request
+response = oauth.post(
+    'https://api.twitter.com/2/tweets',
+    json=payload
+)
+
+if response.status_code != 201:
+    raise Exception(f"Request returned an error: {response.status_code} {response.text}")
+
+print(f"Response code {response.status_code}")
+
+# Saving the response as JSON
+json_response = response.json()
+print(json.dumps(json_response, indent=4, sort_keys=True))
 

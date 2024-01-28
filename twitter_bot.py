@@ -123,6 +123,7 @@ def mars_rover():
 
 mars_results = mars_rover()
 
+# Tweet Mars Rover
 media_id_rover = api.media_upload(filename="mars_img.jpg").media_id_string
 response3 = client.create_tweet(
     text=f"{mars_results[0]} on {mars_results[1]} (Sol: {mars_results[2]}), taken by {mars_results[3]}",

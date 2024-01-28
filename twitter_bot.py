@@ -46,7 +46,7 @@ cur_date = datetime.today().strftime("%Y-%m-%d")
 # https://www.youtube.com/watch?v=r9DzYE5UD6M
 media_id = api.media_upload(filename=f"{cur_date}.jpg").media_id_string
 response1 = client.create_tweet(
-    text="NASA Astronomy Picture of The Day" + "\n" + apod_title + "\n" + apod_date,
+    text="NASA Astronomy Picture of The Day - " + apod_date + "\n" + apod_title + "\n",
     media_ids=[media_id]
 )
 
@@ -56,7 +56,6 @@ def marsweather():
     api_url = r"https://api.nasa.gov/insight_weather/?api_key=DEMO_KEY&feedtype=json&ver=1.0"
     data = requests.get(api_url)
     jso = json.loads(data.text)
-    summary = ""
     # If no sensors with data for any Sols
     if not jso["sol_keys"]:
         return "No Sols"
@@ -79,10 +78,11 @@ def epic_data():
     date = epic_response[0]["date"]
     identifier = epic_response[0]["identifier"]
     image = epic_response[0]["image"]
+    dscovr_j2000_pos = epic_response[0]["dscovr_j2000_position"]
     lunar_j2000_pos = epic_response[0]["lunar_j2000_position"]
     sun_j2000_pos = epic_response[0]["sun_j2000_position"]
     centroid_cords = epic_response[0]["centroid_coordinates"]
-    return [caption, date, identifier, image, lunar_j2000_pos, sun_j2000_pos, centroid_cords]
+    return [caption, date, identifier, image, lunar_j2000_pos, sun_j2000_pos, centroid_cords, dscovr_j2000_pos]
 
 # Download the EPIC image
 def fetch_epic_img():
@@ -98,14 +98,42 @@ def fetch_epic_img():
 fetch_epic_img()
 epic_arr = epic_data()
 
+# EPIC Tweet
 media_id_epic = api.media_upload(filename="epic_img.jpg").media_id_string
 response2 = client.create_tweet(
-    text=f"{epic_arr[0]}\n{epic_arr[1]}",
+    text=f"{epic_arr[0]} at {epic_arr[1]}\nLongitue: {epic_arr[-2]["lon"]} | Latitude: {epic_arr[-2]["lat"]}\nPosition of satellite (X, Y, Z): {epic_arr[-1]["x"]}, {epic_arr[-1]["y"]}, {epic_arr[-1]["z"]}",
     media_ids=[media_id_epic]
 )
 
-# Print response code of APOD tweet
+# Get Mars Rover data
+def mars_rover():
+    mars_url = r'https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/latest_photos?api_key=' + os.environ.get("nasa_key")
+    mars_data = requests.get(mars_url)
+    mars_jso = json.loads(mars_data.text)
+    name = mars_jso["latest_photos"][0]["camera"]["full_name"]
+    earth_date = mars_jso["latest_photos"][0]["earth_date"]
+    mars_img_url = mars_jso["latest_photos"][0]["img_src"]
+    sol_date = mars_jso["latest_photos"][0]["sol"]
+    rover = mars_jso["latest_photos"][0]["rover"]["name"]
+    mars_img = requests.get(mars_img_url).content
+    with open('mars_img.jpg', 'wb') as handler:
+        handler.write(mars_img)
+
+    return [name, earth_date, sol_date, rover]
+
+mars_results = mars_rover()
+
+media_id_rover = api.media_upload(filename="mars_img.jpg").media_id_string
+response3 = client.create_tweet(
+    text=f"{mars_results[0]} on {mars_results[1]} (Sol: {mars_results[2]}), taken by {mars_results[3]}",
+    media_ids=[media_id_rover]
+)
+
+# # Print response code of APOD tweet
 print(f"Tweet response: https://twitter.com/user/status/{response1.data['id']}")
 
-# Print response code of EPIC tweet
+# # Print response code of EPIC tweet
 print(f"Tweet response: https://twitter.com/user/status/{response2.data['id']}")
+
+# Print response code of Mars Rover tweet
+print(f"Tweet response: https://twitter.com/user/status/{response3.data['id']}")

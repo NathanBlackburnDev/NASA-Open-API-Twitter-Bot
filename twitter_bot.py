@@ -41,7 +41,6 @@ apod_url = apod_object_parser.get_url(apod_response)
 apod_object_parser.download_image(apod_url, apod_date)
 
 # Tweet APOD
-# https://docs.tweepy.org/en/stable/client.html#tweets
 cur_date = datetime.today().strftime("%Y-%m-%d")
 # https://www.youtube.com/watch?v=r9DzYE5UD6M
 media_id = api.media_upload(filename=f"{cur_date}.jpg").media_id_string
@@ -51,7 +50,7 @@ response1 = client.create_tweet(
 )
 
 # https://holypython.com/api-2-mars-weather
-# Retrieve InSight Weather API data (Mars InSight is retired now, keeping the code hoping that it will turn back on)
+# Retrieve InSight Weather data (InSight is retired)
 def marsweather():
     api_url = r"https://api.nasa.gov/insight_weather/?api_key=DEMO_KEY&feedtype=json&ver=1.0"
     data = requests.get(api_url)
@@ -61,14 +60,14 @@ def marsweather():
         return "No Sols"
     else:
         for i in jso:
-            at = jso[i]["AT"] + "\n" # per-Sol atmospheric temperature sensor summary data
-            hws = jso[i]["HWS"] + "\n" # per-Sol horizontal wind speed sensor summary data
-            pre = jso[i]["PRE"] + "\n" # per-Sol atmospheric pressure sensor summary data
-            wd = jso[i]["WD"] + "\n" # per-Sol wind direction sensor summary data
-            first_ut = jso[i]["First_UTC"] # UTC range; season
+            at = jso[i]["AT"] + "\n"                                                       # per-Sol atmospheric temperature sensor summary data
+            hws = jso[i]["HWS"] + "\n"                                                     # per-Sol horizontal wind speed sensor summary data
+            pre = jso[i]["PRE"] + "\n"                                                     # per-Sol atmospheric pressure sensor summary data
+            wd = jso[i]["WD"] + "\n"                                                       # per-Sol wind direction sensor summary data
+            first_ut = jso[i]["First_UTC"]                                                 # UTC range; season
             return at, hws, pre, wd, first_ut, jso[i]
         
-# Retireve Earth Polychromatic Imaging Camera (EPIC) data
+# Retireve EPIC data
 # https://medium.com/daily-python/consuming-nasa-api-using-python-part-1-daily-python-17-4ce104fa47ab
 def epic_data():
     epic_url = "https://epic.gsfc.nasa.gov/api/natural"
@@ -130,11 +129,11 @@ response3 = client.create_tweet(
     media_ids=[media_id_rover]
 )
 
-# # Print response code of APOD tweet
+# APOD response
 print(f"Tweet response: https://twitter.com/user/status/{response1.data['id']}")
 
-# # Print response code of EPIC tweet
+# EPIC response
 print(f"Tweet response: https://twitter.com/user/status/{response2.data['id']}")
 
-# Print response code of Mars Rover tweet
+# Mars rover response
 print(f"Tweet response: https://twitter.com/user/status/{response3.data['id']}")

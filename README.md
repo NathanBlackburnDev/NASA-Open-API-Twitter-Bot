@@ -1,2 +1,1 @@
-# NASA Open API Twitter Bot
-[Twitter bot](https://twitter.com/NASAAPIBOT) that uses the EPIC, APOD, Insight and Mars Rover Photo. This is also my CS50 final project. See the APIs [here.](https://api.nasa.gov/)
+CS50 final project. Does not tweet because I didn't want to pay for a server
